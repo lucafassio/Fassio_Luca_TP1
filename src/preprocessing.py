@@ -1,5 +1,5 @@
-from multiprocessing import pool
 import unicodedata
+import numpy as np
 import pandas as pd
 
 from utils import sqftToM2
