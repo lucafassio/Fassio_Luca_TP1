@@ -5,7 +5,7 @@ import pandas as pd
 from utils import sqftToM2
 
 def preprocessingData(df):
-    """
+    '''
     Healer del dataset, manipula el dataframe para arreglar outliers, errores y datos faltantes.
         Reglas de limpieza:
          - precio: se eliminan NaNs, valores negativos y propiedades gratuitas.
@@ -18,7 +18,7 @@ def preprocessingData(df):
          - pileta: se chequea que todos los datos sean bools.
          - lat, lon: se chequea que todos los datos sean floats.
          - edad: se chequea que todos los datos sean floats positivos.
-    """
+    '''
     df.columns = [
         unicodedata.normalize('NFKD', col).encode('ascii', 'ignore').decode('utf-8').lower() 
         for col in df.columns
@@ -52,8 +52,8 @@ def repairDimensions(df):
             df.loc[row, 'metros_cubiertos'] = sqftToM2(mtsCov)
     
     df = df.drop(columns=['unidades'])
-    print(f"Filas con area invalida: {nans[0]}")
-    print(f"Filas con metros cubiertos invalidos: {nans[1]}")
+    print(f'Filas con area invalida: {nans[0]}')
+    print(f'Filas con metros cubiertos invalidos: {nans[1]}')
     return df
 
 
@@ -71,12 +71,12 @@ def repairRestOfData(df):
             if value.dtype != type:
                 df.loc[row, key] = type(value)
 
-    print(f"Filas con ambientes invalidos: {nans[0]}")
-    print(f"Filas con pisos invalidos: {nans[1]}")
-    print(f"Filas con pileta invalida: {nans[2]}")
-    print(f"Filas con latitud invalida: {nans[3]}")
-    print(f"Filas con longitud invalida: {nans[4]}")
-    print(f"Filas con edad invalida: {nans[5]}")
+    print(f'Filas con ambientes invalidos: {nans[0]}')
+    print(f'Filas con pisos invalidos: {nans[1]}')
+    print(f'Filas con pileta invalida: {nans[2]}')
+    print(f'Filas con latitud invalida: {nans[3]}')
+    print(f'Filas con longitud invalida: {nans[4]}')
+    print(f'Filas con edad invalida: {nans[5]}')
     return df
 
 def zScoreParams(df, feature):
@@ -89,8 +89,8 @@ def zScoreApply(df, feature, mu, sigma):
     return (df[feature] - mu) / sigma
 
 def normalizeData(train, valid):
-    train['precio'] = np.log(train['precio'])
-    valid['precio'] = np.log(valid['precio'])
+    train['log_precio'] = np.log(train['precio'])
+    valid['log_precio'] = np.log(valid['precio'])
     
     for type in train['tipo'].unique():
         head = 'es_' + type

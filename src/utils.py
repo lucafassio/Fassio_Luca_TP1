@@ -1,24 +1,26 @@
 import numpy as np
-import pandas as pd
 
 
 def getRandomSample(df, n):
-    """
+    '''
     Devuelve un nuevo dataframe con n filas seleccionadas aleatoriamente del dataframe original.
         Args:
             df (pd.DataFrame): Dataset con los datos.
             n (int): Cantidad de filas a seleccionar.
-    """
+        
+        Returns:
+            pd.DataFrame con las filas deseadas.
+    '''
     return df.sample(n=n, random_state=42).reset_index(drop=True)
 
 
 def countUniqueData(df, column):
-    """
+    '''
     Muestra por terminal la cantidad de ocurrencias de cada valor unico en una columna.
         Args:
             df (pd.DataFrame): Dataset con los datos.
             column (str): Feature a analizar.
-    """
+    '''
     counter = {}
     for value in df[column]:
         if counter.get(value): continue
@@ -26,7 +28,7 @@ def countUniqueData(df, column):
     
     print(f"Datos de la columna '{column}':")
     for key, value in counter.items():
-        print(f" - {key}: {value}")
+        print(f' - {key}: {value}')
 
 
 def sqftToM2(x):
@@ -39,7 +41,7 @@ def cutBetweenBells(array, valleyRange, bins=30):
             array (np.array): Datos a analizar.
             valleyRange (list): Limites izquierdo y derecho del rango que se desea buscar el valle.
         
-        returns:
+        Returns:
             cutValue (np.float64): Valor medio de los extremos del bin que contiene el minimo del histograma.
     '''
     counts, edges = np.histogram(array, bins=bins)
