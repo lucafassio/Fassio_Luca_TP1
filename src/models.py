@@ -1,9 +1,10 @@
 import numpy as np
-from tqdm import tqdm
 from metrics import mse, rmse, mae, r2Score
+from data_splitting import splitData
+from preprocessing import normalizeData
 
-class LinearRegresion:
-    def __init__(self, df, labels, addBias=True):
+class LinearRegression:
+    def __init__(self, df, labels, addBias=False):
         '''
         Clase principal para los modelos
             Args:
@@ -68,7 +69,7 @@ class LinearRegresion:
         self.trained = True
 
 
-    def fitGradientDescent(self, rate=0.01, maxIters=1000, tol=1e-8):
+    def fitGradientDescent(self, rate=0.01, maxIters=10000, tol=1e-8):
         '''
         Entrena el modelo con la data interna que tiene.
             Usa el metodo de Gradient Descent
@@ -85,8 +86,7 @@ class LinearRegresion:
         n = X.shape[0]
         lastCost = float('inf')
 
-        iterator = tqdm(range(maxIters), desc='Entrenando con Gradient Descent')
-        for _ in iterator:
+        for _ in range(maxIters):
             
             pred = self._innerPred(X)
             err = pred - y_real
@@ -96,7 +96,6 @@ class LinearRegresion:
 
             cost = np.mean(err ** 2)
             self.convergenceHistorial.append(cost)
-            iterator.set_postfix({'cost': f'{cost:.6f}'})
 
             if np.abs(lastCost - cost) < tol:
                 self.trained = True
@@ -106,7 +105,7 @@ class LinearRegresion:
             
         print('El metodo no convergio, se alcanzo la maxima cantidad de iteraciones.\nEl modelo no se termino de entrenar correctamente.')
 
-    def evaluate(self, df, labels, desnorm=None):
+    def evaluate(self, df, labels, desnorm=None, printMetrics=True):
         '''
         Evalua el modelo con un dataset dado e imprime metricas.
         '''
@@ -126,10 +125,11 @@ class LinearRegresion:
         mae_val = mae(y_real, pred)
         r2_val = r2Score(y_real, pred)
 
-        print(f'MSE  : {mse_val:.6f}')
-        print(f'RMSE : {rmse_val:.6f}')
-        print(f'MAE  : {mae_val:.6f}')
-        print(f'R2   : {r2_val:.6f}')
+        if printMetrics == True:
+            print(f'MSE  : {mse_val:.6f}')
+            print(f'RMSE : {rmse_val:.6f}')
+            print(f'MAE  : {mae_val:.6f}')
+            print(f'R2   : {r2_val:.6f}')
 
         return {
             'mse': mse_val,
@@ -137,3 +137,45 @@ class LinearRegresion:
             'mae': mae_val,
             'r2': r2_val
         }
+    
+    def printCoefficients(self):
+        '''
+        Imprime los coeficientes del modelo.
+        '''
+        if not self.trained:
+            print('Flaco, entrena el modelo.')
+            return
+
+        print('Coeficientes del modelo:')
+        for feature, coef in zip(self.features, self.coef):
+            print(f'{feature}: {coef:.6f}')
+    
+
+
+def benitoAndaALaPlaya(features, df_ba):
+    folds_ba = splitData(df_ba, trainPart=80, stratify='pileta', folds=5)
+    truePoolPrices = np.full(df_ba.shape[0], np.nan, dtype=float)
+    falsePoolPrices = np.full(df_ba.shape[0], np.nan, dtype=float)
+
+    for train, valid in folds_ba:
+        train, valid = normalizeData(train, valid)
+        modelBenito = LinearRegression(train[features], train['precio'], addBias=True)
+        modelBenito.fitByInverse()
+
+        truePoolValid = valid[features].copy()
+        falsePoolValid = valid[features].copy()
+        
+        truePoolValid.loc[:, 'pileta'] = 1
+        falsePoolValid.loc[:, 'pileta'] = 0
+
+        truePoolPred = modelBenito.prediction(truePoolValid)
+        falsePoolPred = modelBenito.prediction(falsePoolValid)
+
+        for j in range(len(valid)):
+            idx = valid.index[j]
+            pos = df_ba.index.get_loc(idx)
+
+            truePoolPrices[pos] = truePoolPred[j]
+            falsePoolPrices[pos] = falsePoolPred[j]
+
+    return truePoolPrices, falsePoolPrices

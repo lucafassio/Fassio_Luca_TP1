@@ -103,8 +103,20 @@ def normalizeData(train, valid):
     train['edad'] = np.log(train['edad'])
     valid['edad'] = np.log(valid['edad'])
 
-    for feature in ['area', 'metros_cubiertos', 'edad']:
+    train['lat_ba'] = train['lat'] < 0
+    valid['lat_ba'] = valid['lat'] < 0
+    train['lat_ny'] = train['lat'] > 0
+    valid['lat_ny'] = valid['lat'] > 0
+
+    specialCases = ['precio', 'ambientes', 'pisos', 'pileta', 'lat', 'lon', 'edad', 'region', 'log_precio', 'mercado_real']
+    features = list(train.columns)
+    for f in specialCases:
+        if f in features: features.remove(f)
+
+    for feature in features:
         mu, sigma = zScoreParams(train, feature)
+        if sigma == 0 or pd.isna(sigma):
+            sigma = 1.0
 
         train[feature] = zScoreApply(train, feature, mu, sigma)
         valid[feature] = zScoreApply(valid, feature, mu, sigma)

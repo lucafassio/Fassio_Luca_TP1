@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 
 def getRandomSample(df, n):
     '''
@@ -50,3 +50,29 @@ def cutBetweenBells(array, valleyRange, bins=30):
     cutIdx = validIdxs[np.argmin(counts[validIdxs])]
     cutValue = (edges[cutIdx] + edges[cutIdx + 1]) / 2
     return cutValue
+
+def printM4Podium(featuresCombinations, rankBy='mse'):
+    rows = []
+    for name, comb in featuresCombinations.items():
+        m = comb['metric']
+        rows.append({
+            'modelo': name,
+            'mse': m['mse'],
+            'rmse': m['rmse'],
+            'mae': m['mae'],
+            'r2': m['r2']
+        })
+
+    rankingDf = pd.DataFrame(rows)
+    rankingDf = rankingDf.sort_values(rankBy, ascending=False).reset_index(drop=True)
+    rankingToPrint = rankingDf.head(3).copy()
+    print('Ranking de los 3 mejores modelos:')
+    print(f'Metrica de interes para el ranking: {rankBy}')
+    print()
+    for i, row in rankingToPrint.iterrows():
+        print(f'#{i + 1}  {row['modelo']}')
+        print(f'mse:  {row['mse']:.6f}')
+        print(f'rmse: {row['rmse']:.6f}')
+        print(f'mae:  {row['mae']:.6f}')
+        print(f'r2:   {row['r2']:.6f}')
+        print()
