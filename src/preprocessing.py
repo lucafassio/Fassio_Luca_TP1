@@ -79,14 +79,17 @@ def repairRestOfData(df):
     print(f'Filas con edad invalida: {nans[5]}')
     return df
 
+
 def zScoreParams(df, feature):
     mu = df[feature].mean()
     sigma = df[feature].std()
 
     return mu, sigma
 
+
 def zScoreApply(df, feature, mu, sigma):
     return (df[feature] - mu) / sigma
+
 
 def normalizeData(train, valid):
     train['log_precio'] = np.log(train['precio'])

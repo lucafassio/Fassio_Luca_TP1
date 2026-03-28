@@ -4,7 +4,7 @@ from data_splitting import splitData
 from preprocessing import normalizeData
 
 class LinearRegression:
-    def __init__(self, df, labels, addBias=False):
+    def __init__(self, df, labels, addBias=False, l2Penalty=0.0, l1Penalty=0.0):
         '''
         Clase principal para los modelos
             Args:
@@ -26,15 +26,65 @@ class LinearRegression:
         self.coef = np.zeros(len(self.features), dtype=float)
         self.trained = False
         self.convergenceHistorial = []
+        self.l2Penalty = l2Penalty
+        self.l1Penalty = l1Penalty
+
+
+    # Metodos internos
 
     def _innerPred(self, X):
         return np.dot(X, self.coef)
     
+
     def _resetWeights(self):
         self.trained = False
         self.convergenceHistorial = []
         self.coef = np.zeros(len(self.features), dtype=float)
 
+
+    def _mseCost(self, X, y_real, coef=None):
+        w = self.coef if coef is None else coef
+        pred = np.dot(X, w)
+        err = pred - y_real
+        return np.mean(err ** 2)
+
+
+    def _l1PenaltyValue(self, coef=None):
+        w = self.coef if coef is None else coef
+        if self.addBias:
+            return np.sum(np.abs(w[1:]))
+        return np.sum(np.abs(w))
+
+
+    def _lassoObjective(self, X, y_real, lam, coef=None):
+        return self._mseCost(X, y_real, coef=coef) + lam * self._l1PenaltyValue(coef=coef)
+
+
+    def _mseGradient(self, X, y_real, coef=None):
+        w = self.coef if coef is None else coef
+        n = X.shape[0]
+        pred = np.dot(X, w)
+        err = pred - y_real
+        return (2 / n) * np.dot(X.T, err)
+
+
+    def _softThreshold(self, coef, threshold):
+        out = coef.copy()
+        startIdx = 1 if self.addBias else 0
+        out[startIdx:] = np.sign(out[startIdx:]) * np.maximum(np.abs(out[startIdx:]) - threshold, 0.0)
+        return out
+
+
+    def _istaCandidate(self, X, y_real, lam, alpha):
+        grad = self._mseGradient(X, y_real)
+        gradientStep = self.coef - alpha * grad
+        proxStep = self._softThreshold(gradientStep, alpha * lam)
+        if self.addBias:
+            proxStep[0] = gradientStep[0]
+        return proxStep
+
+
+    # Metodos publicos
 
     def prediction(self, df):
         '''
@@ -105,6 +155,50 @@ class LinearRegression:
             
         print('El metodo no convergio, se alcanzo la maxima cantidad de iteraciones.\nEl modelo no se termino de entrenar correctamente.')
 
+
+    def fitRidgeByInverse(self, l2Penalty=None):
+        '''Entrena el modelo con regularizacion L2 (ridge) usando la inversa.'''
+        self._resetWeights()
+
+        X = self.data
+        y = self.target
+        lam = self.l2Penalty if l2Penalty is None else float(l2Penalty)
+
+        reg = np.eye(X.shape[1], dtype=float)
+        if self.addBias:
+            reg[0, 0] = 0.0
+
+        self.coef = np.linalg.pinv(X.T @ X + lam * reg) @ X.T @ y
+        self.trained = True
+
+
+    def fitLassoGradientDescent(self, l1Penalty=None, rate=0.001, maxIters=30000, tol=1e-6):
+        '''Entrena el modelo con regularizacion L1 (lasso) por gradient descent.'''
+        self._resetWeights()
+
+        X = self.data
+        y_real = self.target
+        lam = self.l1Penalty if l1Penalty is None else float(l1Penalty)
+        lastCost = float('inf')
+
+        for _ in range(maxIters):
+            nextCoef = self._istaCandidate(X, y_real, lam, rate)
+
+            self.coef = nextCoef
+
+            cost = self._lassoObjective(X, y_real, lam)
+            self.convergenceHistorial.append(cost)
+
+            if np.abs(lastCost - cost) < tol:
+                self.trained = True
+                return
+
+            lastCost = cost
+
+        print('El metodo no convergio, se alcanzo la maxima cantidad de iteraciones.\nSe devuelven los mejores pesos encontrados hasta el momento.')
+        self.trained = True
+
+
     def evaluate(self, df, labels, desnorm=None, printMetrics=True):
         '''
         Evalua el modelo con un dataset dado e imprime metricas.
@@ -137,6 +231,7 @@ class LinearRegression:
             'mae': mae_val,
             'r2': r2_val
         }
+   
     
     def printCoefficients(self):
         '''

@@ -2,10 +2,11 @@
 import pandas as pd
 
 def defaultSplit(df, trainFrac):
-    train = df.sample(frac=trainFrac)
+    train = df.sample(frac=trainFrac, random_state=42)
     valid = df.drop(train.index)
 
     return train, valid
+
 
 def splitStratified(df, trainFrac, stratCol):
     trainParts = []
@@ -26,7 +27,7 @@ def splitStratified(df, trainFrac, stratCol):
 
 
 def splitFolds(df, k):
-    idxs = df.sample(frac=1).index.to_numpy()
+    idxs = df.sample(frac=1, random_state=42).index.to_numpy()
     folds = np.array_split(idxs, k)
 
     pairs = []
@@ -43,7 +44,7 @@ def splitStratifiedFolds(df, stratCol, k):
     groupFolds = {}
 
     for groupName, group in df.groupby(stratCol):
-        idxs = group.sample(frac=1).index.to_numpy()
+        idxs = group.sample(frac=1, random_state=42).index.to_numpy()
         groupFolds[groupName] = np.array_split(idxs, k)
 
     pairs = []
@@ -57,6 +58,7 @@ def splitStratifiedFolds(df, stratCol, k):
         pairs.append((train, valid))
 
     return pairs
+
 
 def splitData(df, trainPart=80, stratify=None, folds=None):
     if trainPart > 1:

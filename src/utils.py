@@ -34,6 +34,7 @@ def countUniqueData(df, column):
 def sqftToM2(x):
     return x * 0.092903
 
+
 def cutBetweenBells(array, valleyRange, bins=30):
     '''
     Recibe un array de datos y busca el valor que separa dos campanas de una distribucion bimodal en un rango estimado.
@@ -51,6 +52,7 @@ def cutBetweenBells(array, valleyRange, bins=30):
     cutValue = (edges[cutIdx] + edges[cutIdx + 1]) / 2
     return cutValue
 
+
 def printM4Podium(featuresCombinations, rankBy='mse'):
     rows = []
     for name, comb in featuresCombinations.items():
@@ -64,7 +66,7 @@ def printM4Podium(featuresCombinations, rankBy='mse'):
         })
 
     rankingDf = pd.DataFrame(rows)
-    rankingDf = rankingDf.sort_values(rankBy, ascending=False).reset_index(drop=True)
+    rankingDf = rankingDf.sort_values(rankBy, ascending=True).reset_index(drop=True)
     rankingToPrint = rankingDf.head(3).copy()
     print('Ranking de los 3 mejores modelos:')
     print(f'Metrica de interes para el ranking: {rankBy}')
@@ -76,3 +78,6 @@ def printM4Podium(featuresCombinations, rankBy='mse'):
         print(f'mae:  {row['mae']:.6f}')
         print(f'r2:   {row['r2']:.6f}')
         print()
+    
+    bestComb = featuresCombinations[rankingDf.iloc[0]['modelo']]['features']
+    return bestComb

@@ -19,6 +19,7 @@ def zTestMeans(x, y, zCritic=1.96):
         'reject_H0': reject
     }
 
+
 def chiSquaredTest(observed, expected):
     rowTotals = observed.sum(axis=1)
     colTotals = observed.sum(axis=0)
@@ -36,6 +37,7 @@ def chiSquaredTest(observed, expected):
             chiObs += ((o - e) ** 2) / e
     
     return chiObs
+
 
 def cramersV(chi2, observed):
     n = observed.values.sum()

@@ -23,6 +23,7 @@ def r2Score(yReal, yPred):
 
     return 1 - (ssRes / ssTot)
 
+
 def performanceMetrics(target_real, predictions):
     target_real = np.asarray(target_real, dtype=int)
     predictions = np.asarray(predictions, dtype=int)

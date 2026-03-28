@@ -10,6 +10,7 @@ def sigmoidNormalize(values):
     values = np.clip(values, -500, 500)
     return 1.0 / (1.0 + np.exp(-values))
 
+
 def evaluateOnePair(df_ba, features, k, threshold):
     '''
     Evalua un par umbral - features con k-fold.
@@ -65,6 +66,7 @@ def evaluateOnePair(df_ba, features, k, threshold):
 
     return summary
 
+
 def evaluateCombinations(df_ba, featuresCombinations, k=10):
     
     thresholds = np.linspace(0.1, 0.9, 50)
@@ -92,6 +94,7 @@ def evaluateCombinations(df_ba, featuresCombinations, k=10):
         featuresCombinations[name]['best_threshold'] = bestThreshold
 
     return featuresCombinations
+
 
 def printModelRanking(featuresCombinations, rankBy='f1_renta_mean'):
     rows = []
